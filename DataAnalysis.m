@@ -51,8 +51,8 @@ if strcmp(options.DoDataAnalysis,'Yes')
         if index-TouchDuration<=0 % check if we're done
             break
             
-        elseif filteredData(index)<-DetectionThreshold &&...% if signal exceeds noise threshold
-                all(filteredData(index-TouchDuration-OffsetWindowSize:index-TouchDuration+OffsetWindowSize)<DetectionThreshold*1) % and is far enough from other touches to get baseline
+        elseif filteredData(index)<-DetectionThreshold% &&...% if signal exceeds noise threshold
+                %std(Voltage(index-TouchDuration-OffsetWindowSize:index-TouchDuration+OffsetWindowSize)<DetectionThreshold*5) % and is far enough from other touches to get baseline
             
             % Record information about peaks
             NumPeaksDetected=NumPeaksDetected+1; %found one!
@@ -160,6 +160,7 @@ if strcmp(options.DoDataAnalysis,'Yes')
     % clean up for next Subject and save if desired
     if strcmp(options.SaveFigures,'Yes')
         savefig(EachTouchFig,['TouchEventPlots/TouchEvents', fileListing.name(1:end-5)])
+        disp('Savings touch events fig')
     end
     close(EachTouchFig)
     
@@ -178,8 +179,8 @@ if strcmp(options.DoDataAnalysis,'Yes')
 %     MaxForce=zeros(30,1);
     
 %     for i = 1:length(fileListing)
-        load(['Cantilevers/',Cantilever,'.mat'])
-        CantileverDisplacement=PeakList./sensitivity; % in meters
+        load(['Cantilevers/Cantilever',Cantilever,'.mat'])
+        CantileverDisplacement=PeakList./sensitivity/Gain; % in meters
         PeakForce=CantileverDisplacement.*k; % in Newtons
 %     end
     
@@ -187,8 +188,14 @@ if strcmp(options.DoDataAnalysis,'Yes')
     AvgForce=mean(PeakForce);
     StdForce=std(PeakForce);
     
+    
+    
+    %% Data structure for saving to enable easy analysis
+    SummaryData=struct('PeakForces',PeakForce,'AvgForce',AvgForce,'StdForce',StdForce); %#ok<NASGU>
+   
+    
     if strcmp(options.SaveData,'Yes')
-        save(['AnalyzedData/' fileListing.name(1:end-4)],'TouchEnd','TouchStart','PeakList','Offset','Force','CantileverDisplacement','AvgForce','StdForce')
+        save(['AnalyzedData/' fileListing.name(1:end-4)],'SummaryData','TouchEnd','TouchStart','PeakList','Offset','PeakForce','CantileverDisplacement','AvgForce','StdForce')
     end
 end
 

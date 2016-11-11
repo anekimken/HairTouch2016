@@ -1,4 +1,4 @@
-function options = AnalysisOptions
+opfunction options = AnalysisOptions
 options = struct('ParseData','No','DoDataAnalysis','Yes','SaveData','Yes','SaveFigures','No','Filename',[]);
 
 bgHeight = 0.15;
@@ -62,8 +62,7 @@ bg4 = uibuttongroup('visible','off','Position',[0 1-bgHeight*bgCount 1 bgHeight]
 chooseFile = uicontrol('style','pushbutton','units','normalized',...
     'position',[.2 .18 .2 .6],'string','Choose File',...
     'parent',bg4,'callback',@chooseFile_call);
-fileIndicator=annotation('textbox',[.5 1-bgHeight*bgCount+bgHeight/4 .4 .05],'String','No File Selected',...
-    'parent',bg4);
+fileIndicator=annotation('textbox',[.5 1-bgHeight*bgCount+bgHeight/4 .4 .05],'String','No File Selected');
 
 % % Create three radio buttons in the button group.
 % dataSetStart = uicontrol('Style','popupmenu','String',num2cell(1:length(dir('RawDataFiles/Subject*'))),...
