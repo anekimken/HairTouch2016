@@ -1,5 +1,5 @@
-opfunction options = AnalysisOptions
-options = struct('ParseData','No','DoDataAnalysis','Yes','SaveData','Yes','SaveFigures','No','Filename',[]);
+function options = AnalysisOptions
+options = struct('ParseData','No','DoDataAnalysis','Yes','SaveData','Yes','SaveFigures','Yes','Filename',[]);
 
 bgHeight = 0.15;
 bgCount = 1;
@@ -8,6 +8,7 @@ bgCount = 1;
 fig = figure('units','pixels','position',[2000,1000,300,500],...
     'toolbar','none','menu','none','CloseRequestFcn',@closeFig); %#ok<*NASGU>
 
+%% ui control definitions
 % Create the button group.
 bg1 = uibuttongroup('visible','off','Position',[0 1-bgHeight*bgCount 1 bgHeight],'Title','Parse Data?','TitlePosition','centertop','SelectionChangeFcn',@parseChange);
 % Create three radio buttons in the button group.
@@ -45,7 +46,7 @@ set(bg3,'Visible','on');
 
 bgCount=bgCount+1;
 % Create the button group.
-bg4 = uibuttongroup('visible','off','Position',[0 1-bgHeight*bgCount 1 bgHeight],'Title','Save Figs?','TitlePosition','centertop','SelectionChangeFcn',@saveFigsChange);
+bg4 = uibuttongroup('visible','off','Position',[0 1-bgHeight*bgCount 1 bgHeight],'Title','Save Figures?','TitlePosition','centertop','SelectionChangeFcn',@saveFigsChange);
 % Create three radio buttons in the button group.
 saveFigsYes = uicontrol('Style','radiobutton','String','Yes',...
     'Units','normalized','pos',[.25 .35 .2 .6],'parent',bg4,'HandleVisibility','off');
@@ -57,19 +58,14 @@ set(bg4,'Visible','on');
 
 bgCount=bgCount+1;
 % Create the button group.
-bg4 = uibuttongroup('visible','off','Position',[0 1-bgHeight*bgCount 1 bgHeight],'Title','Which data set to analyze?','TitlePosition','centertop');
+bg5 = uibuttongroup('visible','off','Position',[0 1-bgHeight*bgCount 1 bgHeight],'Title','Which data set to analyze?','TitlePosition','centertop');
 % Create button for choosing files
 chooseFile = uicontrol('style','pushbutton','units','normalized',...
     'position',[.2 .18 .2 .6],'string','Choose File',...
-    'parent',bg4,'callback',@chooseFile_call);
+    'parent',bg5,'callback',@chooseFile_call);
 fileIndicator=annotation('textbox',[.5 1-bgHeight*bgCount+bgHeight/4 .4 .05],'String','No File Selected');
 
-% % Create three radio buttons in the button group.
-% dataSetStart = uicontrol('Style','popupmenu','String',num2cell(1:length(dir('RawDataFiles/Subject*'))),...
-%     'Units','normalized','pos',[.4 .1 .2 .6],'parent',bg4,'HandleVisibility','off','Callback',@startChange);
-% % Initialize some button group properties.
-% % set(bg4,'SelectedObject',saveFigsNo);  % default
-set(bg4,'Visible','on');
+set(bg5,'Visible','on');
 
 
 % Create OK pushbutton
@@ -77,6 +73,8 @@ p = uicontrol('style','pushbutton','units','normalized',...
     'position',[.4,.1 ,.2,.1],'string','OK',...
     'callback',@p_call);
 
+
+%% Callbacks
     function parseChange(~,event)
         selection=get(event.NewValue);
         options.ParseData=selection.String;
@@ -93,6 +91,7 @@ p = uicontrol('style','pushbutton','units','normalized',...
     end
 
     function saveFigsChange(~,event)
+        disp('change')
         selection=get(event.NewValue);
         options.SaveFigures=selection.String;
     end
@@ -105,8 +104,14 @@ p = uicontrol('style','pushbutton','units','normalized',...
 
     % OK Pushbutton callback
     function p_call(varargin)
-        uiresume(fig)
-        close(gcf)
+        if ~strcmp(get(fileIndicator,'String'),'No File Selected') || strcmp(options.DoDataAnalysis,'No')
+            uiresume(fig)
+            close(gcf)
+        else
+            WarningDialog=warndlg('Please choose a file.','No file selected');
+            oldPos=get(WarningDialog,'Position');
+            set(WarningDialog,'Position',[2000,1000,oldPos(3),oldPos(4)]);
+        end
     end
 
     function closeFig(src,event)

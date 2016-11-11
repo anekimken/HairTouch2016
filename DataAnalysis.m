@@ -7,7 +7,7 @@ fileListing=dir([DataFolder options.Filename]);
 % for i = 1:length(fileListing)
 load([DataFolder fileListing.name])
 Voltage=MeasuredVoltage;
-Time=(1:length(MeasuredVoltage))./SampleRate;
+Time=(1:length(MeasuredVoltage))./SampleRate; 
 Cantilever=CantileverName;
 % end
 
@@ -37,7 +37,7 @@ if strcmp(options.DoDataAnalysis,'Yes')
     
     % create figure with filtered data, raw data, and detection threshold plotted
     peakFig=figure('Position',[1 69 1280 636]);
-    plot(Voltage)
+    plot(Time,Voltage)
     hold all
     plot(filteredData)
     line([1 length(Voltage)],[DetectionThreshold, DetectionThreshold],'Color','k')
@@ -67,11 +67,13 @@ if strcmp(options.DoDataAnalysis,'Yes')
             % Corrects for offset
             PeakList(NumPeaksDetected)=min(Voltage(TouchStart(NumPeaksDetected):TouchEnd(NumPeaksDetected)))-Offset(NumPeaksDetected);
             
-            % plot detected peak
+            % show range of detected peak
             figure(peakFig)
             xlim([index-3*SampleRate index+3*SampleRate])
             pk=plot(TouchEnd(NumPeaksDetected),0,'Marker','<','LineStyle','none','Color','r','MarkerFaceColor','r');
             start=plot(TouchStart(NumPeaksDetected),0,'Marker','>','LineStyle','none','Color','r','MarkerFaceColor','r');
+            
+            % show range used for finding offset
             offsetStart=plot(TouchStart(NumPeaksDetected)-OffsetWindowSize/2,0,'Marker','<','LineStyle','none','Color','k','MarkerFaceColor','k');
             offsetEnd=plot(TouchStart(NumPeaksDetected)+OffsetWindowSize/2,0,'Marker','>','LineStyle','none','Color','k','MarkerFaceColor','k');
             
@@ -164,36 +166,21 @@ if strcmp(options.DoDataAnalysis,'Yes')
     end
     close(EachTouchFig)
     
-    %     SubjectTouchEnds=TouchEnd;
-    %     SubjectTouchStarts=TouchStart;
-    %     SubjectPeaks=PeakList;
-    %     SubjectOffsets=Offset;
-    %     if strcmp(options.SaveData,'Yes')
-    %         save(['AnalyzedData/' fileListing.name(1:end-4)],'SubjectTouchEnds','SubjectTouchStarts','SubjectPeaks','SubjectOffsets')
-    %     end
-    %     end
     
     
-    %% Calculate Forces
-%     CantileverDisplacement=cell(size(Voltage));
-%     MaxForce=zeros(30,1);
-    
-%     for i = 1:length(fileListing)
+    %% Calculate Forces from cantilever parameters
         load(['Cantilevers/Cantilever',Cantilever,'.mat'])
         CantileverDisplacement=PeakList./sensitivity/Gain; % in meters
         PeakForce=CantileverDisplacement.*k; % in Newtons
-%     end
     
     %% Statistical Analysis
     AvgForce=mean(PeakForce);
     StdForce=std(PeakForce);
     
-    
-    
+
     %% Data structure for saving to enable easy analysis
     SummaryData=struct('PeakForces',PeakForce,'AvgForce',AvgForce,'StdForce',StdForce); %#ok<NASGU>
    
-    
     if strcmp(options.SaveData,'Yes')
         save(['AnalyzedData/' fileListing.name(1:end-4)],'SummaryData','TouchEnd','TouchStart','PeakList','Offset','PeakForce','CantileverDisplacement','AvgForce','StdForce')
     end

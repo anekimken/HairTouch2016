@@ -4,7 +4,7 @@
 clear all
 close all
 
-options = AnalysisOptions;
+options = AnalysisOptions
 
 ParseRawData(options);
 % if strcmp(options.ParseData,'Yes')
