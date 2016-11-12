@@ -4,26 +4,27 @@ function DataAnalysis(options)
 
 DataFolder='ParsedData/';
 fileListing=dir([DataFolder options.Filename]);
-% for i = 1:length(fileListing)
 load([DataFolder fileListing.name])
 Voltage=MeasuredVoltage;
-Time=(1:length(MeasuredVoltage))./SampleRate; 
+Time=(1:length(MeasuredVoltage))./SampleRate;
 Cantilever=CantileverName;
-% end
+
 
 %% Analyze data
 if strcmp(options.DoDataAnalysis,'Yes')
+    
     %% Find touches in data
     
-    TouchDuration=1*SampleRate; %assume size of touch
+    % Input parameters
+    TouchDuration=1*SampleRate; %assume size of touch, by number of points
     OffsetWindowSize=2*round(500/2); % length of data to use to calculate DC offset
     
-    TouchStart=zeros(30,1); % index of touch start
-    TouchEnd=zeros(30,1); % index of touch end
+    % Initialize data structures
+    TouchStartIndex=zeros(30,1); % index of touch start
+    TouchEndIndex=zeros(30,1); % index of touch end
     PeakList=zeros(30,1); % coordinates of peak within touch bounds
     Offset=zeros(30,1); % offset due to unbalanced bridge
-    
-    %     for i = options.DatasetToStartWith:length(fileListing)
+    ManuallyAdjusted=zeros(30,1);
     index=length(Voltage);
     NumPeaksDetected=0;
     
@@ -39,7 +40,7 @@ if strcmp(options.DoDataAnalysis,'Yes')
     peakFig=figure('Position',[1 69 1280 636]);
     plot(Time,Voltage)
     hold all
-    plot(filteredData)
+    plot(Time,filteredData)
     line([1 length(Voltage)],[DetectionThreshold, DetectionThreshold],'Color','k')
     line([1 length(Voltage)],[-DetectionThreshold, -DetectionThreshold],'Color','k')
     
@@ -47,38 +48,42 @@ if strcmp(options.DoDataAnalysis,'Yes')
     EachTouchFig=figure; % figure for plotting each of the 30 touches individually
     set(EachTouchFig,'Position',[1281 316 1920 789])
     while NumPeaksDetected<30 % for each section of filtered data
-        
+        %         disp(std(Voltage(index-TouchDuration-OffsetWindowSize/2:index-TouchDuration+OffsetWindowSize/2)))
         if index-TouchDuration<=0 % check if we're done
             break
             
-        elseif filteredData(index)<-DetectionThreshold% &&...% if signal exceeds noise threshold
-                %std(Voltage(index-TouchDuration-OffsetWindowSize:index-TouchDuration+OffsetWindowSize)<DetectionThreshold*5) % and is far enough from other touches to get baseline
+        elseif filteredData(index)<-DetectionThreshold &&...% if signal exceeds noise threshold
+                std(Voltage(index-TouchDuration-OffsetWindowSize/2:index-TouchDuration+OffsetWindowSize/2))<DetectionThreshold*1 % and is far enough from other touches to get baseline
             
             % Record information about peaks
             NumPeaksDetected=NumPeaksDetected+1; %found one!
-            TouchEnd(NumPeaksDetected)=index;  % peak detected, record this part of signal as peak
-            TouchStart(NumPeaksDetected)=index-TouchDuration;
+            TouchEndIndex(NumPeaksDetected)=index;  % peak detected, record this part of signal as peak
+            TouchStartIndex(NumPeaksDetected)=index-TouchDuration;
             
             % Get Offset
-            Offset(NumPeaksDetected)=mean(Voltage(TouchStart(NumPeaksDetected)-OffsetWindowSize/2:TouchStart(NumPeaksDetected)+OffsetWindowSize/2)); % mean value of 500 points at start of touch
+            Offset(NumPeaksDetected)=mean(Voltage(TouchStartIndex(NumPeaksDetected)-OffsetWindowSize/2:TouchStartIndex(NumPeaksDetected)+OffsetWindowSize/2)); % mean value of 500 points at start of touch
             
             % get value of peak as minumum voltage in this span
             % Uses minimum because downward forces negative volts in this case
             % Corrects for offset
-            PeakList(NumPeaksDetected)=min(Voltage(TouchStart(NumPeaksDetected):TouchEnd(NumPeaksDetected)))-Offset(NumPeaksDetected);
+            PeakList(NumPeaksDetected)=min(Voltage(TouchStartIndex(NumPeaksDetected):TouchEndIndex(NumPeaksDetected)))-Offset(NumPeaksDetected);
             
             % show range of detected peak
             figure(peakFig)
-            xlim([index-3*SampleRate index+3*SampleRate])
-            pk=plot(TouchEnd(NumPeaksDetected),0,'Marker','<','LineStyle','none','Color','r','MarkerFaceColor','r');
-            start=plot(TouchStart(NumPeaksDetected),0,'Marker','>','LineStyle','none','Color','r','MarkerFaceColor','r');
+            xlim([Time(index-3*SampleRate) Time(index+3*SampleRate)])
+            pk=plot(Time(TouchEndIndex(NumPeaksDetected)),0,'Marker','<','LineStyle','none','Color','r','MarkerFaceColor','r');
+            start=plot(Time(TouchStartIndex(NumPeaksDetected)),0,'Marker','>','LineStyle','none','Color','r','MarkerFaceColor','r');
             
             % show range used for finding offset
-            offsetStart=plot(TouchStart(NumPeaksDetected)-OffsetWindowSize/2,0,'Marker','<','LineStyle','none','Color','k','MarkerFaceColor','k');
-            offsetEnd=plot(TouchStart(NumPeaksDetected)+OffsetWindowSize/2,0,'Marker','>','LineStyle','none','Color','k','MarkerFaceColor','k');
+            offsetStart=plot(Time(TouchStartIndex(NumPeaksDetected)-OffsetWindowSize/2),0,'Marker','<','LineStyle','none','Color','k','MarkerFaceColor','k');
+            offsetEnd=plot(Time(TouchStartIndex(NumPeaksDetected)+OffsetWindowSize/2),0,'Marker','>','LineStyle','none','Color','k','MarkerFaceColor','k');
             
             
             % ask user to confirm validity of peak
+            % Things to check for:
+            %   -Is the peak in the right direction?
+            %   -Is the peak contained within the bounds?
+            %   -Is the detected peak just passband ripple or other filtering artifact?
             prompt = 'Good peak? Enter "m" for manual correction or nothing for good peak - ';
             str = input(prompt,'s');
             
@@ -86,7 +91,7 @@ if strcmp(options.DoDataAnalysis,'Yes')
                 % plot individual touch with other touches
                 figure(EachTouchFig)
                 subplot(6,5,NumPeaksDetected)
-                plot(1/5000:1/5000:TouchDuration/SampleRate,Voltage(TouchStart(NumPeaksDetected):TouchEnd(NumPeaksDetected)-1))
+                plot(1/SampleRate:1/SampleRate:TouchDuration/SampleRate,Voltage(TouchStartIndex(NumPeaksDetected):TouchEndIndex(NumPeaksDetected)-1))
                 xlabel('Time (s)')
                 ylabel('Voltage (V)')
                 
@@ -94,33 +99,34 @@ if strcmp(options.DoDataAnalysis,'Yes')
                 
             elseif strcmp(str,'m') % manual peak find
                 disp('Click end of touch after ringdown.')
+                ManuallyAdjusted(NumPeaksDetected)=1;
                 DoneWithManualFind=false;
                 while DoneWithManualFind==false
                     figure(peakFig)
                     [x,~]=ginput(1);
                     % update touch boundaries
-                    TouchEnd(NumPeaksDetected)=round(x);
-                    TouchStart(NumPeaksDetected)=TouchEnd(NumPeaksDetected)-TouchDuration;
+                    TouchEndIndex(NumPeaksDetected)=round(x*SampleRate);
+                    TouchStartIndex(NumPeaksDetected)=TouchEndIndex(NumPeaksDetected)-TouchDuration;
                     
                     % Update value of peak
                     % Get Offset
                     OffsetWindowSize=2*round(500/2);
-                    Offset(NumPeaksDetected)=mean(Voltage(TouchStart(NumPeaksDetected)-OffsetWindowSize/2:TouchStart(NumPeaksDetected)+OffsetWindowSize/2)); % mean value of 500 points at start of touch
+                    Offset(NumPeaksDetected)=mean(Voltage(TouchStartIndex(NumPeaksDetected)-OffsetWindowSize/2:TouchStartIndex(NumPeaksDetected)+OffsetWindowSize/2)); % mean value of 500 points at start of touch
                     
                     % get value of peak as minumum voltage in this span
                     % Uses minimum because downward forces negative volts in this case
                     % Corrects for offset
-                    PeakList(NumPeaksDetected)=min(Voltage(TouchStart(NumPeaksDetected):TouchEnd(NumPeaksDetected)))-Offset(NumPeaksDetected);
+                    PeakList(NumPeaksDetected)=min(Voltage(TouchStartIndex(NumPeaksDetected):TouchEndIndex(NumPeaksDetected)))-Offset(NumPeaksDetected);
                     
                     % plot user's touch bounds
                     delete(pk) % get rid of auto-detected touch from before
                     delete(start)
                     delete(offsetStart)
                     delete(offsetEnd)
-                    pk=plot(TouchEnd(NumPeaksDetected),0,'Marker','<','LineStyle','none','Color','r','MarkerFaceColor','r');
-                    start=plot(TouchStart(NumPeaksDetected),0,'Marker','>','LineStyle','none','Color','r','MarkerFaceColor','r');
-                    offsetStart=plot(TouchStart(NumPeaksDetected)-OffsetWindowSize/2,0,'Marker','<','LineStyle','none','Color','k','MarkerFaceColor','k');
-                    offsetEnd=plot(TouchStart(NumPeaksDetected)+OffsetWindowSize/2,0,'Marker','>','LineStyle','none','Color','k','MarkerFaceColor','k');
+                    pk=plot(Time(TouchEndIndex(NumPeaksDetected)),0,'Marker','<','LineStyle','none','Color','r','MarkerFaceColor','r');
+                    start=plot(Time(TouchStartIndex(NumPeaksDetected)),0,'Marker','>','LineStyle','none','Color','r','MarkerFaceColor','r');
+                    offsetStart=plot(Time(TouchStartIndex(NumPeaksDetected)-OffsetWindowSize/2),0,'Marker','<','LineStyle','none','Color','k','MarkerFaceColor','k');
+                    offsetEnd=plot(Time(TouchStartIndex(NumPeaksDetected)+OffsetWindowSize/2),0,'Marker','>','LineStyle','none','Color','k','MarkerFaceColor','k');
                     
                     % Check to make sure new touch is better
                     prompt = 'Is this better? Yes: 1, No: default, Bad peak: 0 - ' ;
@@ -129,12 +135,12 @@ if strcmp(options.DoDataAnalysis,'Yes')
                     if strcmp(answer,'1')
                         figure(EachTouchFig)
                         subplot(6,5,NumPeaksDetected)
-                        plot(1/5000:1/5000:TouchDuration/SampleRate,Voltage(TouchStart(NumPeaksDetected):TouchEnd(NumPeaksDetected)-1))
+                        plot(1/5000:1/5000:TouchDuration/SampleRate,Voltage(TouchStartIndex(NumPeaksDetected):TouchEndIndex(NumPeaksDetected)-1))
                         xlabel('Time (s)')
                         ylabel('Voltage (V)')
                         
                         DoneWithManualFind=true;
-                        index=TouchStart(NumPeaksDetected); %move one touch duration backwards
+                        index=TouchStartIndex(NumPeaksDetected); %move one touch duration backwards
                         
                     elseif strcmp(answer,'0')
                         NumPeaksDetected=NumPeaksDetected-1; %remove bad peak
@@ -169,20 +175,20 @@ if strcmp(options.DoDataAnalysis,'Yes')
     
     
     %% Calculate Forces from cantilever parameters
-        load(['Cantilevers/Cantilever',Cantilever,'.mat'])
-        CantileverDisplacement=PeakList./sensitivity/Gain; % in meters
-        PeakForce=CantileverDisplacement.*k; % in Newtons
+    load(['Cantilevers/Cantilever',Cantilever,'.mat'])
+    CantileverDisplacement=PeakList./sensitivity/Gain; % in meters
+    PeakForce=CantileverDisplacement.*k; % in Newtons
     
     %% Statistical Analysis
     AvgForce=mean(PeakForce);
     StdForce=std(PeakForce);
     
-
+    
     %% Data structure for saving to enable easy analysis
     SummaryData=struct('PeakForces',PeakForce,'AvgForce',AvgForce,'StdForce',StdForce); %#ok<NASGU>
-   
+    
     if strcmp(options.SaveData,'Yes')
-        save(['AnalyzedData/' fileListing.name(1:end-4)],'SummaryData','TouchEnd','TouchStart','PeakList','Offset','PeakForce','CantileverDisplacement','AvgForce','StdForce')
+        save(['AnalyzedData/' fileListing.name(1:end-4)],'SummaryData','TouchEndIndex','TouchStartIndex','PeakList','Offset','PeakForce','CantileverDisplacement','AvgForce','StdForce')
     end
 end
 

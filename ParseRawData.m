@@ -8,7 +8,7 @@ if strcmp(options.ParseData,'Yes')
     for i=1:NumberOfSubjects
         filename=['RawDataFiles/' fileListing(i).name];
         MeasuredVoltage=csvread(filename,4,0); %#ok<*NASGU>
-        MetaData=textread(filename,'%s',6); %#ok<DTXTRD> % read 5 objects because spaces and new line character make new objects
+        MetaData=textread(filename,'%s',6); %#ok<DTXTRD> % read 6 objects because spaces and new line character make new objects
         SampleRate=str2num(MetaData{1}(11:end)); %#ok<ST2NM>
         Gain=str2num(MetaData{2}(6:end)); %#ok<ST2NM>
         DataCollectionTimeStamp=datestr([MetaData{3},' ', MetaData{4}]);

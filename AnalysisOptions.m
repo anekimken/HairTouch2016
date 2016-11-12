@@ -91,7 +91,6 @@ p = uicontrol('style','pushbutton','units','normalized',...
     end
 
     function saveFigsChange(~,event)
-        disp('change')
         selection=get(event.NewValue);
         options.SaveFigures=selection.String;
     end

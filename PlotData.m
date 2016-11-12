@@ -7,7 +7,7 @@ DataFolder='AnalyzedData/';
 fileListing=dir([DataFolder 'Subject*']);
 for i = 1:length(fileListing)
     load([DataFolder fileListing(i).name],'SummaryData')
-    Peaks(i,:)=abs(SummaryData.PeakForces);  %#ok<NASGU,AGROW>
+    Peaks(i,:)=abs(SummaryData.PeakForces);  %#ok<AGROW>
     MeanForce(i)=abs(SummaryData.AvgForce)*1e6; %#ok<AGROW> % in uN   
     StdForce(i)=SummaryData.StdForce*1e6; %#ok<AGROW> % in uN   
     %     Touches{i}=(1:length(MeasuredVoltage))./SampleRate; %#ok<SAGROW>
@@ -63,7 +63,7 @@ line([0 15],[2 2],...
 
 [legh,~,~,~] = legend('Location',     'NorthWest');
 % objh
-oldPosition=get(legh,'Position'); %#ok<NASGU>
+oldPosition=get(legh,'Position') %#ok<NASGU>
 set(legh,'LineWidth',axesLineWidths,...
     'Interpreter',  'tex',...
     'Position',     [0.1528    0.7    0.2    0.2452],...%oldPosition+[0 0.05 -0.1 0],...
@@ -101,7 +101,7 @@ if strcmp(options.SaveFigures,'Yes')
     % saveas(gcf,'VForceVsubject.eps','epsc')
     % saveas(gcf,'/Users/adam/Documents/MATLAB/HairSwipe/Paper/SubjectForceFig','pdf')
 end
-figIndex=figIndex+1;
+figIndex=figIndex+1; %#ok<NASGU>
 
 
 end
