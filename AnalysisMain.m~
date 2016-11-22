@@ -11,6 +11,7 @@ ParseRawData(options);
 DataAnalysis(options);
 
 PlotData(options)
+
 %{
 %% Analyze data
 if strcmp(options.DoDataAnalysis,'Yes')

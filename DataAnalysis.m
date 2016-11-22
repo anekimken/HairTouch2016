@@ -53,7 +53,8 @@ if strcmp(options.DoDataAnalysis,'Yes')
             break
             
         elseif filteredData(index)<-DetectionThreshold &&...% if signal exceeds noise threshold
-                std(Voltage(index-TouchDuration-OffsetWindowSize/2:index-TouchDuration+OffsetWindowSize/2))<DetectionThreshold*1 % and is far enough from other touches to get baseline
+                std(Voltage(index-TouchDuration-OffsetWindowSize/2:index-TouchDuration+OffsetWindowSize/2))<DetectionThreshold*1 &&... % and is far enough from other touches to get baseline
+                index+3*SampleRate<length(Time)
             
             % Record information about peaks
             NumPeaksDetected=NumPeaksDetected+1; %found one!
