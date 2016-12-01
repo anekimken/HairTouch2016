@@ -1,5 +1,5 @@
 function PlotData(options)
-close all
+
 %% Plots
 figIndex=2;
 % Load data
@@ -22,7 +22,7 @@ figure(11)
 allFData=Peaks(1,:).';
 for i=1:size(Peaks,1)
     allFData=[allFData; Peaks(i,:).']; 
-%     normalityTest(i)=kstest(Peaks(i,:)); 
+    normalityTest(i)=kstest(Peaks(i,:)); 
     lognormalTest(i)=lillietest(log(Peaks(i,:)),'Distr','norm'); %#ok<*AGROW>
 end
 % normalityTest %#ok<NOPRT>
@@ -34,25 +34,17 @@ qqplot(log(allFData)) % check for lognormal distribution
 % lognormal stats
 mu=mean(log(allFData));
 sigma=std(log(allFData));
-% [M,V]=lognstat(mu,sigma);
+[M,V]=lognstat(mu,sigma);
 
 lognlike([mu,sigma],allFData)
 figure(12)
 histfit(allFData,20,'lognormal')
 hold all
 
-medianForces=median(Peaks,2);
-[~,I]=sort(medianForces);
-plotPeaks=zeros(size(Peaks));
+
 figure(13)
-hold on
-for i=1:size(Peaks,1)
-    plotPeaks(i,:)=Peaks(I(i),:);
-    plot(Peaks(I(i),i),'linestyle','none','marker','x')
-end
-figure(14)
-% plot(1:13,plotPeaks,'linestyle','none','marker','o')
-boxplot(plotPeaks.','whisker',9.5)
+plotPeaks
+boxplot(Peaks.')
 disp(Peaks)
 
 
@@ -89,13 +81,10 @@ xlim(axes1,[0 15]);
 
 hold on
 %bar graph for force data
-% bar(MeanForce,'w',...
-%     'DisplayName',  ' ',...%'Applied Force',...
-%     'LineWidth',    dataLineWidths,...
-%     'ShowBaseline','off');
-
-% Boxplot for force data
-boxplot(plotPeaks.','whisker',9.5)
+bar(MeanForce,'w',...
+    'DisplayName',  ' ',...%'Applied Force',...
+    'LineWidth',    dataLineWidths,...
+    'ShowBaseline','off');
 
 
 % Create line for worm touch threshold
@@ -130,7 +119,7 @@ set(gca,'XTickLabelMode',       'manual',...
     'Box',                  'off',...
     'TickLength',           [0.025 0.025])
 
-autoYLim=ylim
+% autoYLim=ylim;
 % ylim(axes1,[0 autoYLim(2)]);
 
 

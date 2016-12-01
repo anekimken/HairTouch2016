@@ -1,5 +1,5 @@
 function options = AnalysisOptions
-options = struct('ParseData','No','DoDataAnalysis','Yes','SaveData','Yes','SaveFigures','Yes','Filename',[]);
+options = struct('ParseData','No','ProcessData','Yes','SaveData','Yes','SaveFigures','Yes','Filename',[]);
 
 bgHeight = 0.15;
 bgCount = 1;
@@ -22,7 +22,7 @@ set(bg1,'Visible','on');
 
 bgCount=bgCount+1;
 % Create the button group.
-bg2 = uibuttongroup('visible','off','Position',[0 1-bgHeight*bgCount 1 bgHeight],'Title','Analyze Data?','TitlePosition','centertop','SelectionChangeFcn',@analyzeChange);
+bg2 = uibuttongroup('visible','off','Position',[0 1-bgHeight*bgCount 1 bgHeight],'Title','Process Data?','TitlePosition','centertop','SelectionChangeFcn',@analyzeChange);
 % Create three radio buttons in the button group.
 analyzeYes = uicontrol('Style','radiobutton','String','Yes','Tag','Yes',...
     'Units','normalized','pos',[.25 .35 .2 .6],'parent',bg2,'HandleVisibility','off');
@@ -82,7 +82,7 @@ p = uicontrol('style','pushbutton','units','normalized',...
 
     function analyzeChange(~,event)
         selection=get(event.NewValue);
-        options.DoDataAnalysis=selection.String;
+        options.ProcessData=selection.String;
     end
 
     function saveDataChange(~,event)
@@ -103,7 +103,7 @@ p = uicontrol('style','pushbutton','units','normalized',...
 
     % OK Pushbutton callback
     function p_call(varargin)
-        if ~strcmp(get(fileIndicator,'String'),'No File Selected') || strcmp(options.DoDataAnalysis,'No')
+        if ~strcmp(get(fileIndicator,'String'),'No File Selected') || strcmp(options.ProcessData,'No')
             uiresume(fig)
             close(gcf)
         else
