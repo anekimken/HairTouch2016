@@ -7,68 +7,59 @@ DataFolder='AnalyzedData/';
 fileListing=dir([DataFolder 'Subject*']);
 for i = 1:length(fileListing)
     load([DataFolder fileListing(i).name],'SummaryData')
-    Peaks(i,:)=abs(SummaryData.PeakForces);  
-    MeanForce(i)=abs(SummaryData.AvgForce)*1e6; % in uN   
+    PeakForces(i,:)=abs(SummaryData.PeakForces);  
+    MeanForce(i)=abs(SummaryData.AvgForce)*1e6; %#ok<*NASGU> % in uN   
     StdForce(i)=SummaryData.StdForce*1e6; % in uN   
     %     Touches{i}=(1:length(MeasuredVoltage))./SampleRate; %#ok<SAGROW>
     %     Cantilever{i}=CantileverName; %#ok<SAGROW>
 end
-figure(10)
-plot(Peaks.')
-
+ 
 
 %% Check statistical distribution of data
-figure(11)
-allFData=Peaks(1,:).';
-for i=1:size(Peaks,1)
-    allFData=[allFData; Peaks(i,:).']; 
-%     normalityTest(i)=kstest(Peaks(i,:)); 
-    lognormalTest(i)=lillietest(log(Peaks(i,:)),'Distr','norm'); %#ok<*AGROW>
+figure(figIndex)
+allFData=PeakForces(1,:).';
+for i=1:size(PeakForces,1)
+    allFData=[allFData; PeakForces(i,:).']; 
+    lognormalTest(i)=lillietest(log(PeakForces(i,:)),'Distr','norm'); %#ok<*AGROW>
 end
-% normalityTest %#ok<NOPRT>
 lognormalTest %#ok<NOPRT>
 qqplot(log(allFData)) % check for lognormal distribution
-% histfit(allFData,50,'lognormal')
-% [f,xi]=ksdensity(allFData);
+figIndex=figIndex+1; 
 
-% lognormal stats
-mu=mean(log(allFData));
-sigma=std(log(allFData));
-% [M,V]=lognstat(mu,sigma);
-
-lognlike([mu,sigma],allFData)
-figure(12)
+% Lognormal Stats
+% mu=mean(log(allFData));
+% sigma=std(log(allFData));
+% lognlike([mu,sigma],allFData)
+figure(figIndex)
 histfit(allFData,20,'lognormal')
-hold all
+figIndex=figIndex+1; 
 
-medianForces=median(Peaks,2);
+
+medianForces=median(PeakForces,2);
 [~,I]=sort(medianForces);
-plotPeaks=zeros(size(Peaks));
-figure(13)
+plotPeaks=zeros(size(PeakForces));
+figure(figIndex)
 hold on
-for i=1:size(Peaks,1)
-    plotPeaks(i,:)=Peaks(I(i),:);
-    plot(Peaks(I(i),i),'linestyle','none','marker','x')
+for i=1:size(PeakForces,1)
+    plotPeaks(i,:)=PeakForces(I(i),:);
+    plot(i,PeakForces(I(i),:),'linestyle','none','marker','x','Color','k')
 end
-figure(14)
-% plot(1:13,plotPeaks,'linestyle','none','marker','o')
-boxplot(plotPeaks.','whisker',9.5)
-disp(Peaks)
+set(gca,'YScale','log')
+figIndex=figIndex+1; 
 
 
 %% Forces by volunteer
-[MeanForce, I]=sort(MeanForce);
-StdForce=StdForce(I);
 
+% Aesthetic parameters
 axesLineWidths=2;
 dataLineWidths=0.75;
 
 % Create figure
 figure1 = figure(figIndex);
 set(gcf,'Units',            'inches',...
-        'Position',         [0 2 3.5 3.5/1.6],...
+        'Position',         [0 2 7 3.5/1.6],... %was [0 2 3.5 3.5/1.6]
         'PaperPositionMode','auto',...
-        'PaperSize',        [3.5 3.5/1.6])
+        'PaperSize',        [7 3.5/1.6]) %was [3.5 3.5/1.6])
 
     
 % Create axes
@@ -95,34 +86,39 @@ hold on
 %     'ShowBaseline','off');
 
 % Boxplot for force data
-boxplot(plotPeaks.','whisker',9.5)
+boxplot(plotPeaks.'*1e6,'whisker',9.5,...
+    'Labels',{' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ' },...
+    'colors','k',...
+    'widths',dataLineWidths)
+Whiskers=[findobj('Tag','Upper Whisker'); findobj('Tag','Lower Whisker')];
+for i=1:length(Whiskers)
+set(Whiskers(i),'LineStyle','-')
+end
 
 
 % Create line for worm touch threshold
-
 line([0 15],[2 2],...
     'Color',        'r',...
     'DisplayName',  ' ',...%['Worm Response Saturation: ~2 ', '\mu',  'N'],...
     'LineWidth',    dataLineWidths)
 
-
-[legh,~,~,~] = legend('Location',     'NorthWest');
-% objh
-oldPosition=get(legh,'Position'); %#ok<NASGU>
-set(legh,'LineWidth',axesLineWidths,...
-    'Interpreter',  'tex',...
-    'Position',     [0.1528    0.7    0.2    0.2452],...%oldPosition+[0 0.05 -0.1 0],...
-    'FontSize',     1)
-legend(gca, 'boxoff')
+% Create legend
+% [legh,~,~,~] = legend('Location',     'NorthWest');
+% oldPosition=get(legh,'Position'); %#ok<NASGU>
+% set(legh,'LineWidth',axesLineWidths,...
+%     'Interpreter',  'tex',...
+%     'Position',     [0.1528    0.7    0.2    0.2452],...%oldPosition+[0 0.05 -0.1 0],...
+%     'FontSize',     1)
+% legend(gca, 'boxoff')
 
 
 % Create errorbar
-errorbar(MeanForce,StdForce/sqrt(30),'MarkerSize',10,'MarkerFaceColor','none',...
-    'MarkerEdgeColor',[0 0 0],...
-    'Marker','none',...
-    'LineStyle','none',...
-    'LineWidth',dataLineWidths,...
-    'Color',[0 0 0]);
+% errorbar(MeanForce,StdForce/sqrt(30),'MarkerSize',10,'MarkerFaceColor','none',...
+%     'MarkerEdgeColor',[0 0 0],...
+%     'Marker','none',...
+%     'LineStyle','none',...
+%     'LineWidth',dataLineWidths,...
+%     'Color',[0 0 0]);
 
 set(gca,'XTickLabelMode',       'manual',...
     'XTickLabel',           [],...
@@ -130,23 +126,23 @@ set(gca,'XTickLabelMode',       'manual',...
     'Box',                  'off',...
     'TickLength',           [0.025 0.025])
 
-autoYLim=ylim
-% ylim(axes1,[0 autoYLim(2)]);
+autoYLim=ylim;
+ylim(axes1,[0.9 1000]);
 
 
-[newX, newY]=MiriamAxes(gca,'xy');
-set(newX,'XTick',[],'YScale','log');
-set(newY,'YScale','log');
+[newX, newY]=MiriamAxes(gca,'y');
+set(newX,'XTick',[]);
+set(newY,'YTick',[1,10,100,1000]);
 oldPosition=get(newY,'Position');
-set(newY,'Position',[oldPosition(1) oldPosition(2) oldPosition(3) oldPosition(4)-.025]);
-set(get(newX,'XLabel'),'Visible','off');
-set(get(newY,'YLabel'),'Visible','off');
+% set(newY,'Position',[oldPosition(1) oldPosition(2) oldPosition(3) oldPosition(4)-.025]);
+
+
 
 if strcmp(options.SaveFigures,'Yes')
-    % saveas(gcf,'VForceVsubject.eps','epsc')
-    % saveas(gcf,'/Users/adam/Documents/MATLAB/HairSwipe/Paper/SubjectForceFig','pdf')
+    saveas(gcf,'VForceVsubject.eps','epsc')
+    saveas(gcf,'/Users/adam/Documents/MATLAB/HairTouch2016/Figures/SubjectForceFig','pdf')
 end
-figIndex=figIndex+1; %#ok<NASGU>
+figIndex=figIndex+1; 
 
 
 end

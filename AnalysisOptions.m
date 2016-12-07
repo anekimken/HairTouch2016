@@ -1,5 +1,5 @@
 function options = AnalysisOptions
-options = struct('ParseData','No','ProcessData','Yes','SaveData','Yes','SaveFigures','Yes','Filename',[]);
+options = struct('ParseData','No','ProcessData','No','SaveData','No','SaveFigures','No','Filename',[]);
 
 bgHeight = 0.15;
 bgCount = 1;
@@ -29,7 +29,7 @@ analyzeYes = uicontrol('Style','radiobutton','String','Yes','Tag','Yes',...
 analyzeNo = uicontrol('Style','radiobutton','String','No',...
     'Units','normalized','pos',[.65 .35 .2 .6],'parent',bg2,'HandleVisibility','off');
 % Initialize some button group properties.
-set(bg2,'SelectedObject',analyzeYes);  % default
+set(bg2,'SelectedObject',analyzeNo);  % default
 set(bg2,'Visible','on');
 
 bgCount=bgCount+1;
@@ -41,7 +41,7 @@ saveDataYes = uicontrol('Style','radiobutton','String','Yes',...
 saveDataNo = uicontrol('Style','radiobutton','String','No',...
     'Units','normalized','pos',[.65 .35 .2 .6],'parent',bg3,'HandleVisibility','off');
 % Initialize some button group properties.
-set(bg3,'SelectedObject',saveDataYes);  % default
+set(bg3,'SelectedObject',saveDataNo);  % default
 set(bg3,'Visible','on');
 
 bgCount=bgCount+1;
@@ -53,7 +53,7 @@ saveFigsYes = uicontrol('Style','radiobutton','String','Yes',...
 saveFigsNo = uicontrol('Style','radiobutton','String','No',...
     'Units','normalized','pos',[.65 .35 .2 .6],'parent',bg4,'HandleVisibility','off');
 % Initialize some button group properties.
-set(bg4,'SelectedObject',saveFigsYes);  % default
+set(bg4,'SelectedObject',saveFigsNo);  % default
 set(bg4,'Visible','on');
 
 bgCount=bgCount+1;
