@@ -27,11 +27,11 @@ qqplot(log(allFData)) % check for lognormal distribution
 figIndex=figIndex+1; 
 
 % Lognormal Stats
-mu=mean(log(allFData));
-sigma=std(log(allFData));
-CV=sqrt(exp(sigma^2)-1);
-GrandMedian=median(allFData)*1e6; % in uN
-quartiles=prctile(allFData,[5,25,50,75,95])*1e6; % in uN
+mu=mean(log(allFData))
+sigma=std(log(allFData))
+CV=sqrt(exp(sigma^2)-1)
+GrandMedian=median(allFData)*1e6 % in uN
+quartiles=prctile(allFData,[5,25,50,75,95])*1e6 % in uN
 
 figure(figIndex)
 histfit(allFData,20,'lognormal')
@@ -172,31 +172,51 @@ CantileverDisplacement=yData./sensitivity/1000; % in meters
 Force=CantileverDisplacement.*k*1e6; % in uN
 Force=Force*-1; % flip sign for aesthetics
 Force=Force-mean(Force(1:2000)); % baseline correction
-Time=xData-.357; % set time=0 to initial contact
+Time=xData+.357; % set time=0 to initial contact
 
 figure(figIndex)
-plotWidth=4;
-plotPos=[5 2 plotWidth plotWidth/1.6];
-plotSize=[0.35 0.25 plotPos(3)-.5 plotPos(4)-.5];
-
-set(figure(figIndex), 'Units','inches',...
-    'Position',plotPos,...
-    'PaperPositionMode','auto',...
-    'PaperSize',[plotWidth plotWidth/1.6])
-
-plot(Time,Force,'k')
-set(gca,'Box','off','Units','inches',...
-    'ActivePositionProperty','Position',...
-    'Position',plotSize)
-xlim([-.2 1])
-MiriamAxes(gca,'xy');
+   plotSize=[0.35 0.25 2 3/1.6-.5];
+    plotPos=[5 2 2.5 3/1.6];
+    
+    set(figure(figIndex), 'Units','inches',...
+        'Position',plotPos,...
+        'PaperPositionMode','auto',...
+        'PaperSize',[2.5 3/1.6])
+    
+plot(xData,Force,'k')
+MiriamAxes(gca,'xy')
 
 
-% Save Figures if requested
-if strcmp(options.SaveFigures,'Yes')
-    saveas(gcf,'ExampleTouch.eps','epsc')
-    saveas(gcf,'/Users/adam/Documents/MATLAB/HairTouch2016/Figures/ExampleTouch','pdf')
-end
+
+    figure(50)
+%     multiPlot=figure(50);
+%     if isempty(get(multiPlot,'UserData'))
+%         set(multiPlot,'UserData',1)
+%     end
+%     p=get(multiPlot,'UserData');
+%     set(multiPlot,'UserData',p+1)
+%     subplot(3,5,p)
+    hold all
+    set(figure(50), 'Units','inches',...
+        'Position',plotPos,...
+        'PaperPositionMode','auto',...
+        'PaperSize',[2.5 3/1.6])
+    plot(-.925:0.001:size(correctedData,3)/1000-.926,-squeeze(correctedData(1,2,:))*HorizCantileverSensitivity*1e6,'k')
+    xlabel('Time (s)')%,'FontSize',12)
+    ylabel(['Force (','\mu','N)'])%,'FontSize',12)
+    set(gca,'FontSize',10,'FontName','Arial')
+    set(gca,'Box','off','Units','inches',...
+        'ActivePositionProperty','Position',...
+        'Position',plotSize)
+    xlim([-1 2])
+    [newX, newY]=MiriamAxes(gca,'xy');
+    set(get(newX,'XLabel'),'Visible','off')
+    set(get(newY,'YLabel'),'Visible','off')
+    set(newX,'FontSize',10,'FontName','Arial','XTick',[-1 0 1 2])
+    set(newY,'FontSize',10,'FontName','Arial')
+
+
+
 figIndex=figIndex+1; 
 
 

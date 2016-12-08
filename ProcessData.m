@@ -164,7 +164,7 @@ if strcmp(options.ProcessData,'Yes')
     
     % clean up for next Subject and save if desired
     if strcmp(options.SaveFigures,'Yes')
-        savefig(EachTouchFig,['TouchEventPlots/TouchEvents', fileListing.name(1:end-5)])
+        savefig(EachTouchFig,['TouchEventPlots/TouchEvents', fileListing.name(1:end)])
         disp('Savings touch events fig')
     end
     close(EachTouchFig)
