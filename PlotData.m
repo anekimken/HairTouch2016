@@ -74,7 +74,6 @@ set(gcf,'Units',            'inches',...
         'Position',         [0 2 5 3.5/1.6],... %was [0 2 3.5 3.5/1.6]
         'PaperPositionMode','auto',...
         'PaperSize',        [5 3.5/1.6]) %was [3.5 3.5/1.6])
-
     
 % Create axes
 axes1 = axes('Parent',figure1,...
@@ -86,18 +85,8 @@ axes1 = axes('Parent',figure1,...
     'Position',             [.13 .11 .775 .79],...
     'YScale',               'log',...
     'FontName',             'Times');
-% ,...
-%     'Units',                'inches',...
-%     'Position',             [1.2 .3 7 4]
 xlim(axes1,[0 15]);
-
-
 hold on
-%bar graph for force data
-% bar(MeanForce,'w',...
-%     'DisplayName',  ' ',...%'Applied Force',...
-%     'LineWidth',    dataLineWidths,...
-%     'ShowBaseline','off');
 
 % Boxplot for force data
 boxplot(plotPeaks.'*1e6,'whisker',9.5,...
@@ -109,30 +98,11 @@ for i=1:length(Whiskers)
 set(Whiskers(i),'LineStyle','-')
 end
 
-
 % Create line for worm touch threshold
 line([0 15],[2 2],...
     'Color',        'r',...
     'DisplayName',  ' ',...%['Worm Response Saturation: ~2 ', '\mu',  'N'],...
     'LineWidth',    dataLineWidths)
-
-% Create legend
-% [legh,~,~,~] = legend('Location',     'NorthWest');
-% oldPosition=get(legh,'Position'); %#ok<NASGU>
-% set(legh,'LineWidth',axesLineWidths,...
-%     'Interpreter',  'tex',...
-%     'Position',     [0.1528    0.7    0.2    0.2452],...%oldPosition+[0 0.05 -0.1 0],...
-%     'FontSize',     1)
-% legend(gca, 'boxoff')
-
-
-% Create errorbar
-% errorbar(MeanForce,StdForce/sqrt(30),'MarkerSize',10,'MarkerFaceColor','none',...
-%     'MarkerEdgeColor',[0 0 0],...
-%     'Marker','none',...
-%     'LineStyle','none',...
-%     'LineWidth',dataLineWidths,...
-%     'Color',[0 0 0]);
 
 set(gca,'XTickLabelMode',       'manual',...
     'XTickLabel',           [],...
@@ -143,13 +113,11 @@ set(gca,'XTickLabelMode',       'manual',...
 autoYLim=ylim;
 ylim(axes1,[0.9 1000]);
 
-
 [newX, newY]=MiriamAxes(gca,'y');
 set(newX,'XTick',[]);
 set(newX,'Visible','off');
 set(newY,'YTick',[1,10,100,1000]);
 oldPosition=get(newY,'Position');
-% set(newY,'Position',[oldPosition(1) oldPosition(2) oldPosition(3) oldPosition(4)-.025]);
 
 % Save Figures if requested
 if strcmp(options.SaveFigures,'Yes')
@@ -159,7 +127,6 @@ end
 figIndex=figIndex+1; 
 
 %% Get one touch for panel in figure
-% open('TouchEventPlots/TouchEventsSubject.fig')
 openfig('TouchEventPlots/TouchEventsSubject.fig','new','invisible')
 AllAxes=get(gcf,'Children');
 dataObjs=get(AllAxes(6),'Children');
@@ -199,6 +166,33 @@ if strcmp(options.SaveFigures,'Yes')
 end
 figIndex=figIndex+1; 
 
+%% Make plots with data from all touches
+AnalyzedDataFiles=dir('AnalyzedData/Subject*');
+ParsedDataFiles=dir('ParsedData/Subject*');
+for i=1:length(AnalyzedDataFiles)
+    load(['AnalyzedData/',AnalyzedDataFiles(i).name],'TouchStartIndex','TouchEndIndex')
+    load(['ParsedData/',AnalyzedDataFiles(i).name],'MeasuredVoltage','CantileverName','SampleRate','Gain')
+    
+    load(['Cantilevers/Cantilever',CantileverName,'.mat'])
+    CantileverDisplacement=MeasuredVoltage./sensitivity/Gain; % in meters
+    Force=CantileverDisplacement.*k; % in Newtons
+    
+    figure(figIndex)
+    set(gcf,'Position',[1 64 1280 641])
+    suptitle(['Touch Event for Subject ',AnalyzedDataFiles(i).name(end-4)])
+    for j=1:length(TouchStartIndex)
+        subplot(5,6,j)
+        plot(1/SampleRate:1/SampleRate:(TouchEndIndex(j)-TouchStartIndex(j)+1)/SampleRate,Force(TouchStartIndex(j):TouchEndIndex(j))*1e6,'k')
+        xlabel('Time (s)')
+        ylabel('Force(uN')
+    end
+    
+    % Save Figures if requested
+    if strcmp(options.SaveFigures,'Yes')
+        saveas(gcf,['/Users/adam/Documents/MATLAB/HairTouch2016/TouchEventPlots/',AnalyzedDataFiles(i).name(1:end-4)],'pdf')
+    end
+    figIndex=figIndex+1;
+end
 
 
 end
