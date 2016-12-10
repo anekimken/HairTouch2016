@@ -7,24 +7,24 @@ DataFolder='AnalyzedData/';
 fileListing=dir([DataFolder 'Subject*']);
 for i = 1:length(fileListing)
     load([DataFolder fileListing(i).name],'SummaryData')
-    PeakForces(i,:)=abs(SummaryData.PeakForces);  
-    MeanForce(i)=abs(SummaryData.AvgForce)*1e6; %#ok<*NASGU> % in uN   
-    StdForce(i)=SummaryData.StdForce*1e6; % in uN   
+    PeakForces(i,:)=abs(SummaryData.PeakForces);
+    MeanForce(i)=abs(SummaryData.AvgForce)*1e6; %#ok<*NASGU> % in uN
+    StdForce(i)=SummaryData.StdForce*1e6; % in uN
     %     Touches{i}=(1:length(MeasuredVoltage))./SampleRate; %#ok<SAGROW>
     %     Cantilever{i}=CantileverName; %#ok<SAGROW>
 end
- 
+
 
 %% Check statistical distribution of data
-figure(figIndex)
+
 allFData=PeakForces(1,:).';
 for i=1:size(PeakForces,1)
-    allFData=[allFData; PeakForces(i,:).']; 
+    allFData=[allFData; PeakForces(i,:).'];
     lognormalTest(i)=lillietest(log(PeakForces(i,:)),'Distr','norm'); %#ok<*AGROW>
 end
-lognormalTest %#ok<NOPRT>
-qqplot(log(allFData)) % check for lognormal distribution
-figIndex=figIndex+1; 
+
+% Normal distribution stats
+GrandMean=mean(allFData)*1e6; %in uN
 
 % Lognormal Stats
 mu=mean(log(allFData));
@@ -32,10 +32,29 @@ sigma=std(log(allFData));
 CV=sqrt(exp(sigma^2)-1);
 GrandMedian=median(allFData)*1e6; % in uN
 quartiles=prctile(allFData,[5,25,50,75,95])*1e6; % in uN
+lognormalTest %#ok<NOPRT>
+
+figure(figIndex)
+qqplot(log(allFData)) % check for lognormal distribution
+figIndex=figIndex+1;
+
+figure(figIndex)
+set(gcf,'Position',[100 260 1037 420])
+subplot(1,2,1)
+ecdf(allFData)
+ylabel('P(F<x)')
+xlabel('Force (N)')
+subplot(1,2,2)
+ecdf(allFData)
+ylabel('P(F<x)')
+xlabel('Force (N)')
+set(gca,'XScale','log')
+suptitle('Cumulative Distribution Plots')
+figIndex=figIndex+1;
 
 figure(figIndex)
 histfit(allFData,20,'lognormal')
-figIndex=figIndex+1; 
+figIndex=figIndex+1;
 
 % compile data for plotting from small to large median
 medianForces=median(PeakForces,2);
@@ -71,10 +90,10 @@ dataLineWidths=0.75;
 % Create figure
 figure1 = figure(figIndex);
 set(gcf,'Units',            'inches',...
-        'Position',         [0 2 5 3.5/1.6],... %was [0 2 3.5 3.5/1.6]
-        'PaperPositionMode','auto',...
-        'PaperSize',        [5 3.5/1.6]) %was [3.5 3.5/1.6])
-    
+    'Position',         [0 2 5 3.5/1.6],... %was [0 2 3.5 3.5/1.6]
+    'PaperPositionMode','auto',...
+    'PaperSize',        [5 3.5/1.6]) %was [3.5 3.5/1.6])
+
 % Create axes
 axes1 = axes('Parent',figure1,...
     'XTickLabelMode',       'manual',...
@@ -95,7 +114,7 @@ boxplot(plotPeaks.'*1e6,'whisker',9.5,...
     'widths',dataLineWidths)
 Whiskers=[findobj('Tag','Upper Whisker'); findobj('Tag','Lower Whisker')];
 for i=1:length(Whiskers)
-set(Whiskers(i),'LineStyle','-')
+    set(Whiskers(i),'LineStyle','-')
 end
 
 % Create line for worm touch threshold
@@ -124,7 +143,7 @@ if strcmp(options.SaveFigures,'Yes')
     saveas(gcf,'VForceVsubject.eps','epsc')
     saveas(gcf,'/Users/adam/Documents/MATLAB/HairTouch2016/Figures/SubjectForceFig','pdf')
 end
-figIndex=figIndex+1; 
+figIndex=figIndex+1;
 
 %% Get one touch for panel in figure
 openfig('TouchEventPlots/TouchEventsSubject.fig','new','invisible')
@@ -164,35 +183,34 @@ if strcmp(options.SaveFigures,'Yes')
     saveas(gcf,'ExampleTouch.eps','epsc')
     saveas(gcf,'/Users/adam/Documents/MATLAB/HairTouch2016/Figures/ExampleTouch','pdf')
 end
-figIndex=figIndex+1; 
+figIndex=figIndex+1;
 
-%% Make plots with data from all touches
-AnalyzedDataFiles=dir('AnalyzedData/Subject*');
-ParsedDataFiles=dir('ParsedData/Subject*');
-for i=1:length(AnalyzedDataFiles)
-    load(['AnalyzedData/',AnalyzedDataFiles(i).name],'TouchStartIndex','TouchEndIndex')
-    load(['ParsedData/',AnalyzedDataFiles(i).name],'MeasuredVoltage','CantileverName','SampleRate','Gain')
-    
-    load(['Cantilevers/Cantilever',CantileverName,'.mat'])
-    CantileverDisplacement=MeasuredVoltage./sensitivity/Gain; % in meters
-    Force=CantileverDisplacement.*k; % in Newtons
-    
-    figure(figIndex)
-    set(gcf,'Position',[1 64 1280 641])
-    suptitle(['Touch Event for Subject ',AnalyzedDataFiles(i).name(end-4)])
-    for j=1:length(TouchStartIndex)
-        subplot(5,6,j)
-        plot(1/SampleRate:1/SampleRate:(TouchEndIndex(j)-TouchStartIndex(j)+1)/SampleRate,Force(TouchStartIndex(j):TouchEndIndex(j))*1e6,'k')
-        xlabel('Time (s)')
-        ylabel('Force(uN')
-    end
-    
-    % Save Figures if requested
-    if strcmp(options.SaveFigures,'Yes')
+%% Save plots with data from all touches, if requested
+if strcmp(options.SaveFigures,'Yes')
+    AnalyzedDataFiles=dir('AnalyzedData/Subject*');
+    ParsedDataFiles=dir('ParsedData/Subject*');
+    for i=1:length(AnalyzedDataFiles)
+        load(['AnalyzedData/',AnalyzedDataFiles(i).name],'TouchStartIndex','TouchEndIndex')
+        load(['ParsedData/',AnalyzedDataFiles(i).name],'MeasuredVoltage','CantileverName','SampleRate','Gain')
+        
+        load(['Cantilevers/Cantilever',CantileverName,'.mat'])
+        CantileverDisplacement=MeasuredVoltage./sensitivity/Gain; % in meters
+        Force=CantileverDisplacement.*k; % in Newtons
+        
+        figure(figIndex)
+        set(gcf,'Position',[1 64 1280 641])
+        suptitle(['Touch Event for Subject ',AnalyzedDataFiles(i).name(end-4)])
+        for j=1:length(TouchStartIndex)
+            subplot(5,6,j)
+            plot(1/SampleRate:1/SampleRate:(TouchEndIndex(j)-TouchStartIndex(j)+1)/SampleRate,Force(TouchStartIndex(j):TouchEndIndex(j))*1e6,'k')
+            xlabel('Time (s)')
+            ylabel('Force(uN')
+        end
+
         saveas(gcf,['/Users/adam/Documents/MATLAB/HairTouch2016/TouchEventPlots/',AnalyzedDataFiles(i).name(1:end-4)],'pdf')
+        
+        figIndex=figIndex+1;
     end
-    figIndex=figIndex+1;
 end
-
 
 end
