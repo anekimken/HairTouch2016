@@ -1,11 +1,11 @@
 function options = AnalysisOptions
-options = struct('ParseData','No','ProcessData','No','SaveData','No','SaveFigures','Yes','Filename',[]);
+options = struct('ParseData','No','ProcessData','No','SaveData','No','SaveFigures','No','DiagFigs','No','Filename',[]);
 
-bgHeight = 0.15;
+bgHeight = 0.13;
 bgCount = 1;
 
 % Create figure
-fig = figure('units','pixels','position',[2000,1000,300,500],...
+fig = figure('units','pixels','position',[2000,1000,300,600],...
     'toolbar','none','menu','none','CloseRequestFcn',@closeFig); %#ok<*NASGU>
 
 %% ui control definitions
@@ -53,7 +53,19 @@ saveFigsYes = uicontrol('Style','radiobutton','String','Yes',...
 saveFigsNo = uicontrol('Style','radiobutton','String','No',...
     'Units','normalized','pos',[.65 .35 .2 .6],'parent',bg4,'HandleVisibility','off');
 % Initialize some button group properties.
-set(bg4,'SelectedObject',saveFigsYes);  % default
+set(bg4,'SelectedObject',saveFigsNo);  % default
+set(bg4,'Visible','on');
+
+bgCount=bgCount+1;
+% Create the button group.
+bg4 = uibuttongroup('visible','off','Position',[0 1-bgHeight*bgCount 1 bgHeight],'Title','Diagnostic Figures?','TitlePosition','centertop','SelectionChangeFcn',@diagFigsChange);
+% Create three radio buttons in the button group.
+diagFigsYes = uicontrol('Style','radiobutton','String','Yes',...
+    'Units','normalized','pos',[.25 .35 .2 .6],'parent',bg4,'HandleVisibility','off');
+diagFigsNo = uicontrol('Style','radiobutton','String','No',...
+    'Units','normalized','pos',[.65 .35 .2 .6],'parent',bg4,'HandleVisibility','off');
+% Initialize some button group properties.
+set(bg4,'SelectedObject',diagFigsNo);  % default
 set(bg4,'Visible','on');
 
 bgCount=bgCount+1;
@@ -93,6 +105,11 @@ p = uicontrol('style','pushbutton','units','normalized',...
     function saveFigsChange(~,event)
         selection=get(event.NewValue);
         options.SaveFigures=selection.String;
+    end
+
+    function diagFigsChange(~,event)
+        selection=get(event.NewValue);
+        options.DiagFigs=selection.String;
     end
 
     % Choose file pushbutton callback

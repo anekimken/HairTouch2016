@@ -31,6 +31,11 @@ if strcmp(options.ProcessData,'Yes')
     
     % set peak detection based on noise in baseline signal
     DetectionThreshold=3*std(Voltage(3000:8000)); %note: start at 3000th data point to avoid filtering artifact
+    % Calculate Forces at detection threshold
+    load(['Cantilevers/Cantilever',Cantilever,'.mat'])
+    DispThreshold=DetectionThreshold/sensitivity/Gain; % in meters
+    ForceThreshold=DispThreshold*k; %#ok<NASGU> % in Newtons 
+    
     
     % create figure with filtered data, raw data, and detection threshold plotted
     peakFig=figure('Position',[1 69 1280 636]);
@@ -44,7 +49,6 @@ if strcmp(options.ProcessData,'Yes')
     EachTouchFig=figure; % figure for plotting each of the 30 touches individually
     set(EachTouchFig,'Position',[1281 316 1920 789])
     while NumPeaksDetected<30 % for each section of filtered data
-        %         disp(std(Voltage(index-TouchDuration-OffsetWindowSize/2:index-TouchDuration+OffsetWindowSize/2)))
         if index-TouchDuration<=0 % check if we're done
             break
             

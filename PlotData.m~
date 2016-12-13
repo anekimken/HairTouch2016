@@ -30,32 +30,30 @@ sigma=std(log(allFData));
 CV=sqrt(exp(sigma^2)-1);
 GrandMedian=median(allFData)*1e6; % in uN
 quartiles=prctile(allFData,[5,25,50,75,95])*1e6; % in uN
-% lognormalTest %#ok<NOPRT>
+lognormalTest %#ok<NOPRT>
+%{
+figure(figIndex)
+qqplot(log(allFData)) % check for lognormal distribution
+figIndex=figIndex+1;
 
-if strcmp(options.DiagFigs,'Yes')
-    figure(figIndex)
-    qqplot(log(allFData)) % check for lognormal distribution
-    figIndex=figIndex+1;
-    
-    figure(figIndex)
-    set(gcf,'Position',[100 260 1037 420])
-    subplot(1,2,1)
-    ecdf(allFData)
-    ylabel('P(F<x)')
-    xlabel('Force (N)')
-    subplot(1,2,2)
-    ecdf(allFData)
-    ylabel('P(F<x)')
-    xlabel('Force (N)')
-    set(gca,'XScale','log')
-    suptitle('Cumulative Distribution Plots')
-    figIndex=figIndex+1;
-    
-    figure(figIndex)
-    histfit(allFData,20,'lognormal')
-    figIndex=figIndex+1;
-end
+figure(figIndex)
+set(gcf,'Position',[100 260 1037 420])
+subplot(1,2,1)
+ecdf(allFData)
+ylabel('P(F<x)')
+xlabel('Force (N)')
+subplot(1,2,2)
+ecdf(allFData)
+ylabel('P(F<x)')
+xlabel('Force (N)')
+set(gca,'XScale','log')
+suptitle('Cumulative Distribution Plots')
+figIndex=figIndex+1;
 
+figure(figIndex)
+histfit(allFData,20,'lognormal')
+figIndex=figIndex+1;
+%}
 % compile data for plotting from small to large median
 medianForces=median(PeakForces,2);
 [~,I]=sort(medianForces);
@@ -71,14 +69,12 @@ end
 ForcesInOrder=fliplr(PeakForces);
 TouchNumber=1:30;
 TouchNumber=TouchNumber(:); %change to column vector
-if strcmp(options.DiagFigs,'Yes'); figure(figIndex); end
+figure(figIndex)
 for i=1:size(ForcesInOrder,1)
-    if strcmp(options.DiagFigs,'Yes')
-        subplot(7,2,i)
-        plot(ForcesInOrder(i,:))
-    end
+    subplot(7,2,i)
+    plot(ForcesInOrder(i,:))
     [Rho(i),Pval(i)]=corr(TouchNumber,ForcesInOrder(i,:).'); % find Pearson's Correlation
-    if strcmp(options.DiagFigs,'Yes'); title(['Rho = ',num2str(Rho(i)),', p = ',num2str(Pval(i))]); end
+    title(['Rho = ',num2str(Rho(i)),', p = ',num2str(Pval(i))])
 end
 
 figIndex=figIndex+1;
@@ -147,49 +143,82 @@ if strcmp(options.SaveFigures,'Yes')
 end
 figIndex=figIndex+1;
 
-%% Plot min, median, and max touches for median volunteer
+%% Get one touch for panel in figure
+openfig('TouchEventPlots/TouchEventsSubject.fig','new','invisible')
+AllAxes=get(gcf,'Children');
+dataObjs=get(AllAxes(6),'Children');
+
+xData=get(dataObjs,'XData');
+yData=get(dataObjs,'YData');
+
 % Get touches from median volunteer
 medianVolunteer=fileListing(I(7)).name;
 load([DataFolder medianVolunteer],'TouchStartIndex','TouchEndIndex','PeakForce')
 load(['ParsedData/',medianVolunteer],'MeasuredVoltage','CantileverName','SampleRate','Gain')
 load(['Cantilevers/Cantilever',CantileverName,'.mat'])
 CantileverDisplacement=MeasuredVoltage./sensitivity/Gain; % in meters
-medVolunteerForce=CantileverDisplacement.*k; % in Newtons
-medVolunteerForce=medVolunteerForce*-1; % flip force for aesthetics
+Force=CantileverDisplacement.*k; % in Newtons
+Force=Force*-1; % flip force for aesthetics
 
 % min, median, max from this volunteer
 [~,medianVolunteerSortIndex]=sort(PeakForce);
-maxForceTouchEvent=medVolunteerForce(TouchStartIndex(medianVolunteerSortIndex(1)):TouchEndIndex(medianVolunteerSortIndex(1)));
-maxForceTouchEventStartIndex=333-300;
-medForceTouchEvent=medVolunteerForce(TouchStartIndex(medianVolunteerSortIndex(16)):TouchEndIndex(medianVolunteerSortIndex(16)));
+minForceTouchEvent=Force(TouchStartIndex(medianVolunteerSortIndex(1)):TouchEndIndex(medianVolunteerSortIndex(1)));
+minForceTouchEventStartIndex=333-300;
+medForceTouchEvent=Force(TouchStartIndex(medianVolunteerSortIndex(16)):TouchEndIndex(medianVolunteerSortIndex(16)));
 medForceTouchEventStartIndex=1040-300;
-minForceTouchEvent=medVolunteerForce(TouchStartIndex(medianVolunteerSortIndex(30)):TouchEndIndex(medianVolunteerSortIndex(30)));
-minForceTouchEventStartIndex=2476-300;
+maxForceTouchEvent=Force(TouchStartIndex(medianVolunteerSortIndex(30)):TouchEndIndex(medianVolunteerSortIndex(30)));
+maxForceTouchEventStartIndex=2476-300;
 
-% plot all 3 together
+% plot them together
+plotTime=0.5*SampleRate; % in number of points
+TimeVector=1/SampleRate:1/SampleRate:plotTime/SampleRate;
+TimeVector
 figure(figIndex)
-plotSideLength=2.5;
-plotPos=[5 2 plotSideLength plotSideLength];
+plotWidth=4;
+plotPos=[5 2 plotWidth plotWidth/1.6];
 plotSize=[0.35 0.25 plotPos(3)-.5 plotPos(4)-.5];
 
 set(figure(figIndex), 'Units','inches',...
     'Position',plotPos,...
     'PaperPositionMode','auto',...
-    'PaperSize',[plotSideLength plotSideLength])
+    'PaperSize',[plotWidth plotWidth/1.6])
 
-plotTime=0.5*SampleRate; % in number of points
-TimeVector=1/SampleRate:1/SampleRate:plotTime/SampleRate;
-TimeVector=TimeVector-300/SampleRate;
 hold all
-plot(TimeVector,maxForceTouchEvent(maxForceTouchEventStartIndex:maxForceTouchEventStartIndex+plotTime-1),'Color',[27,158,119]/255)
-plot(TimeVector,medForceTouchEvent(medForceTouchEventStartIndex:medForceTouchEventStartIndex+plotTime-1),'Color',[217,95,2]/255)
-plot(TimeVector,minForceTouchEvent(minForceTouchEventStartIndex:minForceTouchEventStartIndex+plotTime-1),'Color',[117,112,179]/255)
+plot(TimeVector,minForceTouchEvent(minForceTouchEventStartIndex:minForceTouchEventStartIndex+plotTime-1))
+plot(TimeVector,medForceTouchEvent(medForceTouchEventStartIndex:medForceTouchEventStartIndex+plotTime-1))
+plot(TimeVector,maxForceTouchEvent(maxForceTouchEventStartIndex:maxForceTouchEventStartIndex+plotTime-1))
 
 set(gca,'Box','off','Units','inches',...
     'ActivePositionProperty','Position',...
     'Position',plotSize)
-xlim([TimeVector(1) TimeVector(end)])
+xlim([-. 1])
 MiriamAxes(gca,'xy');
+
+%{
+load('Cantilevers/Cantilever3B.mat')
+CantileverDisplacement=yData./sensitivity/1000; % in meters
+Force=CantileverDisplacement.*k*1e6; % in uN
+Force=Force*-1; % flip sign for aesthetics
+Force=Force-mean(Force(1:2000)); % baseline correction
+Time=xData-.357; % set time=0 to initial contact
+
+figure(figIndex)
+plotWidth=4;
+plotPos=[5 2 plotWidth plotWidth/1.6];
+plotSize=[0.35 0.25 plotPos(3)-.5 plotPos(4)-.5];
+
+set(figure(figIndex), 'Units','inches',...
+    'Position',plotPos,...
+    'PaperPositionMode','auto',...
+    'PaperSize',[plotWidth plotWidth/1.6])
+
+plot(Time,Force,'k')
+set(gca,'Box','off','Units','inches',...
+    'ActivePositionProperty','Position',...
+    'Position',plotSize)
+xlim([-.2 1])
+MiriamAxes(gca,'xy');
+%}
 
 % Save Figures if requested
 if strcmp(options.SaveFigures,'Yes')
@@ -198,19 +227,8 @@ if strcmp(options.SaveFigures,'Yes')
 end
 figIndex=figIndex+1;
 
-%% Plot cdf of min, median, and max volunteers
-% Gather data
-minVolunteer=fileListing(I(13)).name;
-load([DataFolder minVolunteer],'TouchStartIndex','TouchEndIndex','PeakForce')
-load(['ParsedData/',minVolunteer],'MeasuredVoltage','CantileverName','SampleRate','Gain')
-load(['Cantilevers/Cantilever',CantileverName,'.mat'])
-CantileverDisplacement=MeasuredVoltage./sensitivity/Gain; % in meters
-Force=CantileverDisplacement.*k; % in Newtons
-Force=Force*-1; % flip force for aesthetics
-
-
 %% Save plots with data from all touches, if requested
-if strcmp(options.SaveFigures,'Yes') && strcmp(options.DiagFigs,'Yes')
+if strcmp(options.SaveFigures,'Yes')
     AnalyzedDataFiles=dir('AnalyzedData/Subject*');
     ParsedDataFiles=dir('ParsedData/Subject*');
     for i=1:length(AnalyzedDataFiles)
