@@ -92,15 +92,15 @@ dataLineWidths=0.75;
 % Create figure
 figure1 = figure(figIndex);
 set(gcf,'Units',            'inches',...
-    'Position',         [0 2 5 3.5/1.6],... %was [0 2 3.5 3.5/1.6]
+    'Position',         [0 2 3.5 3.5/1.6],... %was [0 2 3.5 3.5/1.6]
     'PaperPositionMode','auto',...
-    'PaperSize',        [5 3.5/1.6]) %was [3.5 3.5/1.6])
+    'PaperSize',        [3.5 3.5/1.6]) %was [3.5 3.5/1.6])
 
 % Create axes
 axes1 = axes('Parent',figure1,...
     'XTickLabelMode',       'manual',...
-    'XTickLabel',           [],...
-    'XTick',                [1 2 3 4 5 6 7 8 9 10 11 12 13 14],...
+    'XTickLabel',           ['A' 'B' 'C' 'D' 'E' 'F' 'G' 'H' 'I' 'J' 'K' 'L' 'M'],...
+    'XTick',                [1 2 3 4 5 6 7 8 9 10 11 12 13],...
     'FontSize',             12,...
     'LineWidth',            axesLineWidths,...
     'Position',             [.13 .11 .775 .79],...
@@ -126,17 +126,19 @@ line([0 15],[2 2],...
     'LineWidth',    dataLineWidths)
 
 set(gca,'XTickLabelMode',       'manual',...
-    'XTickLabel',           [],...
-    'XTick',                [],...%1 2 3 4 5 6 7 8 9 10 11 12 13 14],...
     'Box',                  'off',...
     'TickLength',           [0.025 0.025])
+%'XTickLabel',           [],...
+    %'XTick',                [],...%1 2 3 4 5 6 7 8 9 10 11 12 13 14],...
 
 autoYLim=ylim;
 ylim(axes1,[0.9 1000]);
 
-[newX, newY]=MiriamAxes(gca,'y');
-set(newX,'XTick',[]);
-set(newX,'Visible','off');
+[newX, newY]=MiriamAxes(gca,'xy');
+set(newX,   'XTickLabel',   ['A'; 'B'; 'C'; 'D'; 'E' ;'F' ;'G'; 'H'; 'I'; 'J'; 'K'; 'L'; 'M'],...
+            'XTick',        [1 2 3 4 5 6 7 8 9 10 11 12 13],...
+            'FontName',     'Arial',...
+            'FontSize',     10);
 set(newY,'YTick',[1,10,100,1000]);
 oldPosition=get(newY,'Position');
 
@@ -159,12 +161,18 @@ medVolunteerForce=medVolunteerForce*-1; % flip force for aesthetics
 
 % min, median, max from this volunteer
 [~,medianVolunteerSortIndex]=sort(PeakForce);
-maxForceTouchEvent=medVolunteerForce(TouchStartIndex(medianVolunteerSortIndex(1)):TouchEndIndex(medianVolunteerSortIndex(1)));
+maxForceTouchEvent=1e6*medVolunteerForce(TouchStartIndex(medianVolunteerSortIndex(1)):TouchEndIndex(medianVolunteerSortIndex(1)));
 maxForceTouchEventStartIndex=333-300;
-medForceTouchEvent=medVolunteerForce(TouchStartIndex(medianVolunteerSortIndex(16)):TouchEndIndex(medianVolunteerSortIndex(16)));
+maxForceTouchEvent=maxForceTouchEvent-mean(maxForceTouchEvent(1:300));
+
+medForceTouchEvent=1e6*medVolunteerForce(TouchStartIndex(medianVolunteerSortIndex(16)):TouchEndIndex(medianVolunteerSortIndex(16)));
 medForceTouchEventStartIndex=1040-300;
-minForceTouchEvent=medVolunteerForce(TouchStartIndex(medianVolunteerSortIndex(30)):TouchEndIndex(medianVolunteerSortIndex(30)));
+medForceTouchEvent=medForceTouchEvent-mean(medForceTouchEvent(1:300));
+
+minForceTouchEvent=1e6*medVolunteerForce(TouchStartIndex(medianVolunteerSortIndex(30)):TouchEndIndex(medianVolunteerSortIndex(30)));
 minForceTouchEventStartIndex=2476-300;
+minForceTouchEvent=minForceTouchEvent-mean(minForceTouchEvent(1:300));
+
 
 % plot all 3 together
 figure(figIndex)
@@ -200,13 +208,51 @@ figIndex=figIndex+1;
 
 %% Plot cdf of min, median, and max volunteers
 % Gather data
-minVolunteer=fileListing(I(13)).name;
-load([DataFolder minVolunteer],'TouchStartIndex','TouchEndIndex','PeakForce')
-load(['ParsedData/',minVolunteer],'MeasuredVoltage','CantileverName','SampleRate','Gain')
-load(['Cantilevers/Cantilever',CantileverName,'.mat'])
-CantileverDisplacement=MeasuredVoltage./sensitivity/Gain; % in meters
-Force=CantileverDisplacement.*k; % in Newtons
-Force=Force*-1; % flip force for aesthetics
+minVolunteer=fileListing(I(1)).name;
+load([DataFolder minVolunteer],'PeakForce')
+minVolunteerForces=-PeakForce;
+
+medVolunteer=fileListing(I(7)).name;
+load([DataFolder medVolunteer],'PeakForce')
+medVolunteerForces=-PeakForce;
+SortedForces=sort(medVolunteerForces)*1e6;
+
+maxVolunteer=fileListing(I(13)).name;
+load([DataFolder maxVolunteer],'PeakForce')
+maxVolunteerForces=-PeakForce;
+
+% plot all 3 together
+figure(figIndex)
+hold all
+plotSideLength=2.5;
+plotPos=[8 2 plotSideLength plotSideLength];
+plotSize=[0.35 0.25 plotPos(3)-.5 plotPos(4)-.5];
+
+set(figure(figIndex), 'Units','inches',...
+    'Position',plotPos,...
+    'PaperPositionMode','auto',...
+    'PaperSize',[plotSideLength plotSideLength])
+
+[cdff, x]=ecdf(minVolunteerForces*1e6);
+plot(x,cdff,'Color','k')%[27,158,119]/255)
+[cdff, x]=ecdf(medVolunteerForces*1e6);
+plot(x,cdff,'Color','k')%[217,95,2]/255)
+[cdff, x]=ecdf(maxVolunteerForces*1e6);
+plot(x,cdff,'Color','k')%[117,112,179]/255)
+
+% mark trials plotted in Fig 2B
+plot(SortedForces(1),1/30,'o','Color',[117,112,179]/255)
+plot(SortedForces(16),16/30,'o','Color',[217,95,2]/255)
+plot(SortedForces(30),1,'o','Color',[27,158,119]/255)
+
+set(gca,'XScale','log')
+MiriamAxes(gca,'xy');
+
+% Save Figures if requested
+if strcmp(options.SaveFigures,'Yes')
+    saveas(gcf,'/Users/adam/Documents/MATLAB/HairTouch2016/Figures/CDFofMinMedMax','pdf')
+end
+figIndex=figIndex+1;
 
 
 %% Save plots with data from all touches, if requested
@@ -230,7 +276,7 @@ if strcmp(options.SaveFigures,'Yes') && strcmp(options.DiagFigs,'Yes')
             xlabel('Time (s)')
             ylabel('Force(uN')
         end
-
+        
         saveas(gcf,['/Users/adam/Documents/MATLAB/HairTouch2016/TouchEventPlots/',AnalyzedDataFiles(i).name(1:end-4)],'pdf')
         
         figIndex=figIndex+1;
