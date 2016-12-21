@@ -12,7 +12,7 @@ if strcmp(options.ProcessData,'Yes')
     %% Find touches in data
     
     % Input parameters
-    TouchDuration=1.5*SampleRate; %assume size of touch, by number of points
+    TouchDuration=2.5*SampleRate; %assume size of touch, by number of points
     OffsetWindowSize=2*round(500/2); % length of data to use to calculate DC offset
     
     % Initialize data structures

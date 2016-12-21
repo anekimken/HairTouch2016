@@ -5,8 +5,8 @@
 
 close all
 clear all
-savePlots='No' %#ok<NOPTS>
-compileData='Yes' %#ok<NOPTS>
+savePlots='Yes' %#ok<NOPTS>
+compileData='No' %#ok<NOPTS>
 
 plotSize=[0.35 0.25 2.35 3/1.6-.5];
 plotPos=[0 2 3 3/1.6];
@@ -36,7 +36,7 @@ ylim([0 ylimits(2)])
 set(gca,'FontSize',10)
 set(gca,'Box','off','Units','inches',...
     'ActivePositionProperty','Position',...
-    'Position',plotSize,'FontSize',10,'FontName','Arial')
+    'Position',plotSize,'FontSize',8,'FontName','Arial')
 [newX,newY]=MiriamAxes(gca,'xy');
 set(get(newX,'XLabel'),'Visible','off')
 set(get(newY,'YLabel'),'Visible','off')
@@ -52,7 +52,7 @@ plot(deflection*1e6,CantileverForce*1e6,'k','DisplayName','Indentation Data','Li
 ylimits=ylim;
 xlimits=[0 60];
 hold all
-set(gca,'FontSize',10)
+set(gca,'FontSize',8)
 
 Fdfit=fit(deflection*1e6,CantileverForce*1e6,'poly1');
 fitPlot=plot(Fdfit,'b');
@@ -62,7 +62,7 @@ xlim([0 xlimits(2)])
 legend off
 set(gca,'Box','off','Units','inches',...
     'ActivePositionProperty','Position',...
-    'Position',plotSize,'FontSize',10,'FontName','Arial')
+    'Position',plotSize,'FontSize',8,'FontName','Arial')
 [newX,newY]=MiriamAxes(gca,'xy');
 set(get(newX,'XLabel'),'Visible','off')
 set(get(newY,'YLabel'),'Visible','off')
@@ -114,7 +114,7 @@ end
 
 % Fit cubic to data
 inverseCubic=fittype('a/(x)^3');
-options=fitoptions('Method','NonLinearLeastSquares');
+options=fitoptions('Method','LinearLeastSquares');
 Lkfit=fit(fitData(:,1),fitData(:,2),inverseCubic,options);
 
 
@@ -123,7 +123,7 @@ figure('Units','inches',...
     'Position',plotPos,...
     'PaperPositionMode','auto',...
     'PaperSize',paperDimension)
-set(gca,'FontSize',10,'FontName','Arial')
+set(gca,'FontSize',8,'FontName','Arial')
 hold on
 for i=1:size(daterTots,1)
     plot(FreeLength(i,1)*1e3, kPoints{i,1},'ko','MarkerSize',5,'LineWidth',.25)    
@@ -139,14 +139,14 @@ ylim('auto')
 % set(gca,'YScale','log')
 xlimits=xlim;
 xlim([4 xlimits(2)])
-pause
+
 set(gca,'FontSize',10)
 set(gca,'Box','off','Units','inches',...
     'ActivePositionProperty','Position',...
-    'Position',plotSize,'FontSize',10,'FontName','Arial')
+    'Position',plotSize,'FontSize',8,'FontName','Arial')
 [newX,newY]=MiriamAxes(gca,'xy');
-set(newX,'FontSize',10,'FontName','Arial')
-set(newY,'FontSize',10,'FontName','Arial')
+set(newX,'FontSize',8,'FontName','Arial')
+set(newY,'FontSize',8,'FontName','Arial')
 
 set(get(newX,'XLabel'),'Visible','off')
 set(get(newY,'YLabel'),'Visible','off')

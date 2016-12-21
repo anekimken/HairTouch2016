@@ -92,16 +92,16 @@ dataLineWidths=0.75;
 % Create figure
 figure1 = figure(figIndex);
 set(gcf,'Units',            'inches',...
-    'Position',         [0 2 3.5 3.5/1.6],... %was [0 2 3.5 3.5/1.6]
+    'Position',         [0 2 2.5 1.8],... %was [0 2 3.5 3.5/1.6]
     'PaperPositionMode','auto',...
-    'PaperSize',        [3.5 3.5/1.6]) %was [3.5 3.5/1.6])
+    'PaperSize',        [2.5 1.8]) %was [3.5 3.5/1.6])
 
 % Create axes
 axes1 = axes('Parent',figure1,...
     'XTickLabelMode',       'manual',...
     'XTickLabel',           ['A' 'B' 'C' 'D' 'E' 'F' 'G' 'H' 'I' 'J' 'K' 'L' 'M'],...
     'XTick',                [1 2 3 4 5 6 7 8 9 10 11 12 13],...
-    'FontSize',             12,...
+    'FontSize',             8,...
     'LineWidth',            axesLineWidths,...
     'Position',             [.13 .11 .775 .79],...
     'YScale',               'log',...
@@ -129,16 +129,16 @@ set(gca,'XTickLabelMode',       'manual',...
     'Box',                  'off',...
     'TickLength',           [0.025 0.025])
 %'XTickLabel',           [],...
-    %'XTick',                [],...%1 2 3 4 5 6 7 8 9 10 11 12 13 14],...
+%'XTick',                [],...%1 2 3 4 5 6 7 8 9 10 11 12 13 14],...
 
 autoYLim=ylim;
 ylim(axes1,[0.9 1000]);
 
 [newX, newY]=MiriamAxes(gca,'xy');
 set(newX,   'XTickLabel',   ['A'; 'B'; 'C'; 'D'; 'E' ;'F' ;'G'; 'H'; 'I'; 'J'; 'K'; 'L'; 'M'],...
-            'XTick',        [1 2 3 4 5 6 7 8 9 10 11 12 13],...
-            'FontName',     'Arial',...
-            'FontSize',     10);
+    'XTick',        [1 2 3 4 5 6 7 8 9 10 11 12 13],...
+    'FontName',     'Arial',...
+    'FontSize',     8);
 set(newY,'YTick',[1,10,100,1000]);
 oldPosition=get(newY,'Position');
 
@@ -184,18 +184,23 @@ set(figure(figIndex), 'Units','inches',...
     'Position',plotPos,...
     'PaperPositionMode','auto',...
     'PaperSize',[plotSideLength plotSideLength])
+color1=[222,235,247]/255;
+color2=[158,202,225]/255;
+color3=[49,130,189]/255;
 
 plotTime=0.5*SampleRate; % in number of points
 TimeVector=1/SampleRate:1/SampleRate:plotTime/SampleRate;
 TimeVector=TimeVector-300/SampleRate;
 hold all
-plot(TimeVector,maxForceTouchEvent(maxForceTouchEventStartIndex:maxForceTouchEventStartIndex+plotTime-1),'Color',[27,158,119]/255)
-plot(TimeVector,medForceTouchEvent(medForceTouchEventStartIndex:medForceTouchEventStartIndex+plotTime-1),'Color',[217,95,2]/255)
-plot(TimeVector,minForceTouchEvent(minForceTouchEventStartIndex:minForceTouchEventStartIndex+plotTime-1),'Color',[117,112,179]/255)
+plot(TimeVector,maxForceTouchEvent(maxForceTouchEventStartIndex:maxForceTouchEventStartIndex+plotTime-1),'Color',color1)
+plot(TimeVector,medForceTouchEvent(medForceTouchEventStartIndex:medForceTouchEventStartIndex+plotTime-1),'Color',color2)
+plot(TimeVector,minForceTouchEvent(minForceTouchEventStartIndex:minForceTouchEventStartIndex+plotTime-1),'Color',color3)
 
 set(gca,'Box','off','Units','inches',...
     'ActivePositionProperty','Position',...
-    'Position',plotSize)
+    'Position',plotSize,...
+    'FontName','Arial',...
+    'FontSize',8)
 xlim([TimeVector(1) TimeVector(end)])
 MiriamAxes(gca,'xy');
 
@@ -233,20 +238,35 @@ set(figure(figIndex), 'Units','inches',...
     'PaperPositionMode','auto',...
     'PaperSize',[plotSideLength plotSideLength])
 
-[cdff, x]=ecdf(minVolunteerForces*1e6);
-plot(x,cdff,'Color','k')%[27,158,119]/255)
-[cdff, x]=ecdf(medVolunteerForces*1e6);
-plot(x,cdff,'Color','k')%[217,95,2]/255)
-[cdff, x]=ecdf(maxVolunteerForces*1e6);
-plot(x,cdff,'Color','k')%[117,112,179]/255)
+csvwrite('DaterTotsForMiriam',[minVolunteerForces*1e6, medVolunteerForces*1e6, maxVolunteerForces*1e6])
+
+% [cdff, x]=ecdf(minVolunteerForces*1e6);
+% plot(x,cdff,'Color','k')%[27,158,119]/255)
+% highestPoint=max(x);
+% [cdff, x]=ecdf(medVolunteerForces*1e6);
+% plot(x,cdff,'Color','k')%[217,95,2]/255)
+% [cdff, x]=ecdf(maxVolunteerForces*1e6);
+% plot(x,cdff,'Color','k')%[117,112,179]/255)
+% line([highestPoint, 10^4],[1 1],'Color','k')
+
+ecdf(minVolunteerForces*1e6);
+ecdf(medVolunteerForces*1e6);
+ecdf(maxVolunteerForces*1e6);
+kids=get(gca,'Children');
+set(kids(1),'Color','k')
+set(kids(2),'Color','k')
+set(kids(3),'Color','k')
 
 % mark trials plotted in Fig 2B
-plot(SortedForces(1),1/30,'o','Color',[117,112,179]/255)
-plot(SortedForces(16),16/30,'o','Color',[217,95,2]/255)
-plot(SortedForces(30),1,'o','Color',[27,158,119]/255)
+plot(SortedForces(1),1/30,'o','Color',color3,'MarkerFaceColor',color3)
+plot(SortedForces(16),16/30,'o','Color',color2,'MarkerFaceColor',color2)
+plot(SortedForces(30),1,'o','Color',color1,'MarkerFaceColor',color1)
 
 set(gca,'XScale','log')
-MiriamAxes(gca,'xy');
+xlabel(' ')
+ylabel(' ')
+[~,newY]=MiriamAxes(gca,'xy');
+set(newY,'YTick',[0; 0.5; 1])
 
 % Save Figures if requested
 if strcmp(options.SaveFigures,'Yes')
@@ -254,32 +274,96 @@ if strcmp(options.SaveFigures,'Yes')
 end
 figIndex=figIndex+1;
 
+%% Plot cdf of ALL volunteers
+
+% Create figure
+figure(figIndex)
+hold all
+plotSideLength=7;
+plotPos=[10 2 plotSideLength plotSideLength];
+plotSize=[0.35 0.25 plotPos(3)-.5 plotPos(4)-.5];
+
+% set(figure(figIndex),'Position',[1447 32 797 1073])
+set(figure(figIndex), 'Units','inches',...
+    'Position',plotPos,...
+    'PaperPositionMode','auto',...
+    'PaperSize',[plotSideLength plotSideLength])
+
+% Gather data
+for i=1:length(fileListing)
+    Volunteer=fileListing(I(i)).name;
+    load([DataFolder Volunteer],'PeakForce')
+    VolunteerForces=-PeakForce;
+
+%     subplot(7,2,i)
+    ecdf(VolunteerForces*1e6);
+    
+    dataAxes=gca;
+    kids=get(dataAxes,'Children');
+    set(kids,'Color','k')
+    set(dataAxes,'XScale','log')
+    xlabel({'Force (\muN)'})
+    ylabel({'P(Force\leq x)'})
+    set(newY,'YTick',[0; 0.5; 1])
+
+    
+    
+end
+
+line([5.5 250],[0.5 0.5],'Color','k','LineStyle',':')
+plot(250,0.5,'>','Color','k','MarkerFaceColor','k')
+% arrow=annotation('arrow');
+% set(arrow,  'X',[.36 .77],...
+%     'Y',[0.54 0.54])
+text(5,0.5,'Volunteer A','HorizontalAlignment','right');
+text(300,0.5,'Volunteer M','HorizontalAlignment','left');
+[~,newY]=MiriamAxes(gca,'xy');
+set(newY,'YTick',[0; 0.5; 1])
+
+
+% Save Figures if requested
+if strcmp(options.SaveFigures,'Yes')
+    saveas(gcf,'/Users/adam/Documents/MATLAB/HairTouch2016/Figures/CDFofAll','pdf')
+end
+figIndex=figIndex+1;
 
 %% Save plots with data from all touches, if requested
-if strcmp(options.SaveFigures,'Yes') && strcmp(options.DiagFigs,'Yes')
+if strcmp(options.DiagFigs,'Yes')
     AnalyzedDataFiles=dir('AnalyzedData/Subject*');
     ParsedDataFiles=dir('ParsedData/Subject*');
     for i=1:length(AnalyzedDataFiles)
-        load(['AnalyzedData/',AnalyzedDataFiles(i).name],'TouchStartIndex','TouchEndIndex')
-        load(['ParsedData/',AnalyzedDataFiles(i).name],'MeasuredVoltage','CantileverName','SampleRate','Gain')
+        load(['AnalyzedData/',fileListing(I(i)).name],'TouchStartIndex','TouchEndIndex')
+        load(['ParsedData/',fileListing(I(i)).name],'MeasuredVoltage','CantileverName','SampleRate','Gain')
         
         load(['Cantilevers/Cantilever',CantileverName,'.mat'])
         CantileverDisplacement=MeasuredVoltage./sensitivity/Gain; % in meters
         Force=CantileverDisplacement.*k; % in Newtons
         
         figure(figIndex)
-        set(gcf,'Position',[1 64 1280 641])
-        suptitle(['Touch Event for Subject ',AnalyzedDataFiles(i).name(end-4)])
+        set(gcf,'Color','w',...
+            'Units','inches',...
+            'PaperPositionMode','auto',...
+            'PaperSize',[8.5 8])
+        suptitle(['Touch Events for Volunteer ',char(i+64)])
         for j=1:length(TouchStartIndex)
             subplot(5,6,j)
-            plot(1/SampleRate:1/SampleRate:(TouchEndIndex(j)-TouchStartIndex(j)+1)/SampleRate,Force(TouchStartIndex(j):TouchEndIndex(j))*1e6,'k')
-            xlabel('Time (s)')
-            ylabel('Force(uN')
+            plotStartIndex=TouchStartIndex(medianVolunteerSortIndex(j));
+            plotEndIndex=TouchEndIndex(medianVolunteerSortIndex(j));
+            CorrectedForce=-Force(plotStartIndex:plotEndIndex)-mean(Force(plotStartIndex-250:plotStartIndex+250));
+            plot(1/SampleRate:1/SampleRate:(plotEndIndex-plotStartIndex+1)/SampleRate,CorrectedForce*1e6,'k')
+            xlim([0 (plotEndIndex-plotStartIndex)/SampleRate])
         end
         
-        saveas(gcf,['/Users/adam/Documents/MATLAB/HairTouch2016/TouchEventPlots/',AnalyzedDataFiles(i).name(1:end-4)],'pdf')
+        labelAxes=axes('position',[.12 .1 .8 .8],'visible','off');
+        ylabel(['Force (',texlabel('mu'),'N)'],'visible','on','FontName','Arial','FontSize',8);
+        xlabel('Time (s)','visible','on','FontName','Arial','FontSize',8)
         
+        if strcmp(options.SaveFigures,'Yes')
+            saveas(gcf,['/Users/adam/Documents/MATLAB/HairTouch2016/TouchEventPlots/Subject',char(i+64)],'eps')
+        end
         figIndex=figIndex+1;
+        
+        
     end
 end
 
